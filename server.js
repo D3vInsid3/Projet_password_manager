@@ -14,15 +14,15 @@ const app = express()
 
 //Permet d'ouvrir l'acces au back au front
 //option de cors
-const corsOptions ={
+const corsOptions = {
     origin: process.env.CLIENT_URL,
-    Credentials: true,
-    'allowedHeaders': ['sessionId', 'Content-type'],
-    'exposedHeaders': ['sessionId'],
-    'methods': [GET, HEAD, PUT, PATCH, POST, DELETE],
-    'preflightContinue': false
+    credentials: true,
+    allowedHeaders: ['sessionId', 'Content-type'],
+    exposedHeaders: ['sessionId'],
+    methods: "GET, HEAD, PUT, PATCH, POST, DELETE",
+    preflightContinue: false
 }
-app.use(cors({corsOptions}))
+app.use(cors(corsOptions))
 
 
 //Définition du port du backend
@@ -51,3 +51,5 @@ app.use('/api/compte', compteRoutes)
 app.listen(port, () => {
     console.log(`Localhost ouvert sur le port ${port}`);
 })
+
+

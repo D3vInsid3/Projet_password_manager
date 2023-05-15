@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       max: 1024,
-      minLength: 6
+      minLength: 5
     }
   },
   {
@@ -48,9 +48,9 @@ userSchema.statics.login = async function (email, password) {
     if (auth) {
       return user
     }
-    throw Error('Votre password est incorect')
+    throw Error('Incorect password')
   }
-  throw Error('Votre email est incorect')
+  throw Error('Incorect email')
 }
 
 const UserModel = mongoose.model("user", userSchema);

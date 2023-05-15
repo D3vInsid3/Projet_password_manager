@@ -11,19 +11,19 @@ module.exports.checkUser = (req, res, next) => {
         jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
             //Colback
             //Si la comparaison retourne une erreur
-            if (err) {
+            if (err) {                
                 res.locals.user = null
                 //Je supprime le cookie HS
                 res.cookies('jwt', '', { maxAge: 0.1 })
                 next()
-            } else {
+            } else {                
                 let user = await UserModel.findById(decodedToken.id)
                 res.locals.user = user
                 next()
             }
         })
         // Si le token n'est pas bon
-    } else {
+    } else {        
         res.locals.user = null
         next()
     }
@@ -47,6 +47,6 @@ module.exports.requireAuth = (req, res, next) => {
             }
         })
     } else {
-        console.log("Pas de token");
+        console.log("JWT : Pas de token");
     }
 }
