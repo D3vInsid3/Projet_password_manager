@@ -3,15 +3,7 @@ const { isEmail } = require('validator');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema(
-  {
-    pseudo: {
-      type: String,
-      required: true,
-      minLength: 3,
-      maxLength: 55,
-      unique: true,
-      trim: true
-    },
+  {    
     email: {
       type: String,
       required: true,
@@ -25,6 +17,9 @@ const userSchema = new mongoose.Schema(
       required: true,
       max: 1024,
       minLength: 5
+    },
+    comptes: {
+      type: [String]
     }
   },
   {
@@ -32,15 +27,15 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Fonction qui se lance avant de faire le save des infos dans la db
-// Fonction pour crypter le mot de passe
+// Function launched before save data in DB
+// Function for crypting the password
 userSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt();
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Fonction pour comparer le mdp avec celui de la db (gestion du cruptage fait)
+// Function for compare the password
 userSchema.statics.login = async function (email, password) {
   const user = await this.findOne({ email })
   if (user) {

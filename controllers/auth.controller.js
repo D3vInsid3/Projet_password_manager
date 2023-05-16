@@ -16,11 +16,11 @@ module.exports.signUp = async (req, res) => {
     }
 }
 
-// Fonction pour creer un token de cryptage
+// Function for creating a token
+// Define the duration (in milliseconds)
 const maxAge = 3 * 24 * 60 * 60 * 1000
 const createToken = (id) => {    
-    return jwt.sign({ id }, process.env.TOKEN_SECRET, {
-        //Durée de validité du token (ici 3 jours)
+    return jwt.sign({ id }, process.env.TOKEN_SECRET, {        
         expiresIn: maxAge
     })
 }
@@ -40,10 +40,8 @@ module.exports.signIn = async (req, res) => {
     }
 }
 
-// Se deconnecter
+// Logout
 module.exports.logout = (req, res) => {
-    res.cookie('jwt', '', { maxAge: 0.1 });
-    //soucis avec le redirect
-    //res.redirect('/')    
+    res.cookie('jwt', '', { maxAge: 0.1 });   
     res.status(200).json({ message: 'You are logged out' })
 }

@@ -40,6 +40,11 @@ const compteSchema = new mongoose.Schema(
             minLength: 3,
             maxLength: 55,
             trim: true,
+        },
+        adresse: {
+            type: String,
+            required: true,
+            trim: true,
         }
     },
     {

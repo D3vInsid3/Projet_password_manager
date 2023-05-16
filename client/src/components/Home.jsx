@@ -3,18 +3,37 @@ import { Link } from "react-router-dom"
 import '../styles/styles.css';
 import { UidContext } from "../components/AppContext.js";
 import axios from "axios";
+import cookie from "js-cookie"
 
 function Home() {
   const uid = useContext(UidContext);
 
   const handleClick = (e) => {
     e.preventDefault()
-    try {
-        axios.get(`${process.env.REACT_APP_API_URL}api/user/logout`);
-        window.location.href = process.env.BACK_URL; 
-    } catch (error) {
-        console.log(error);
-    }       
+
+    //Logout solution with deleting cookie frontend and backend
+    const removeCookie = (key) => {
+      if (window !== "undefined") {        
+        cookie.remove(key, {expires: 0.1})
+      }
+    }
+
+    const logout = async () => {      
+      await axios({
+        method: 'get',
+        url: `${process.env.REACT_APP_API_URL}api/user/logout`,
+        withCredentials: true
+      }).then(() => {        
+        removeCookie("jwt")
+        window.location = "/"
+      }).catch((err) => {
+        console.log(err);
+      })
+    }
+
+    logout()
+
+       
 }
 
   return (
@@ -24,7 +43,7 @@ function Home() {
         <h2 className="m-3 text-center">Password Manager</h2>
         <form className="needs-validation">
           <div className="d-grid gap-2">
-            {uid ? <button className="" onClick={handleClick}><Link className="clear" to="/">Logout</Link></button> : <button className=""><Link className="clear" to="/Login">Login</Link></button>}
+            {uid ? <button className="" onClick={handleClick}>Logout</button> : <button className=""><Link className="clear" to="/Login">Login</Link></button>}
             <button className=""><Link className="clear" to="/signup">Signup</Link></button>
           </div>
         </form>

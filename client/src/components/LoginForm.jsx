@@ -41,21 +41,17 @@ function LoginForm() {
           <div className="form-group was-validated mb-2">
             <label htmlFor="email" className="form-label">Email address :</label>
             <input type="email" className="form-control" id="email" onChange={(e) => setEmail(e.target.value)} value={email} required></input>
-            <div className="emailError">
+            <div className="emailError text-danger">
               
             </div>
           </div>
           <div className="form-group was-validated mb-2">
             <label htmlFor="password" className="form-label"> Password :</label>
             <input type="password" className="form-control" id="password" onChange={(e) => setPassword(e.target.value)} value={password} required></input>
-            <div className="passwordError">
+            <div className="passwordError text-danger">
               
             </div>
-          </div>
-          <div className="form-group mb-2">
-            <input type="checkbox"></input>
-            <label htmlFor="check">Remember me</label>
-          </div>
+          </div>          
           <div className="d-grid gap-2">
             <button type="submit" className="btn btn-success mt-2">Log in</button>
           </div>

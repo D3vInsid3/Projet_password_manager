@@ -4,9 +4,8 @@ import { useEffect, useState, useContext } from "react";
 import '../styles/styles.css';
 import axios from "axios";
 import { UidContext } from "../components/AppContext.js";
+import { set } from "mongoose";
 
-
-import image1 from './facebook.svg'
 
 const data = [
     {
@@ -91,7 +90,7 @@ function BoutonCompte(props) {
     return <button className="m-1" onClick={() => handleClick(props.id)}>{props.children}</button>
 }
 
-/* PARTIE 1 */
+/* Section 1 */
 function SelecteurFiltreCompte() {
 
     const uniqueCategorie = [...new Set(data.map((c) => c.Categorie))];
@@ -121,68 +120,57 @@ function FiltreOrdreAlph() {
     </form>
 }
 
-/* PARTIE 2 */
-function EnteteCompteListe(props) {
-    return <div id={props.id}>
-        <img src={image1} />
-        <h2>{props.name}</h2>
-        <p>{props.lien}</p>
-    </div>
-}
+/* Section 2 */
+function EnteteCompteListe() {
+    const uid = useContext(UidContext);
+    const [listeComptes, setListeComptes] = useState([]);
+    const [infoCompte, setInfoCompte] = useState([]);
 
-function SupCompteListe(props) {
-    return <button className="m-1" id={props.id}>Supprimer</button>
-}
+    useEffect(() => {
+        const fetchComptes = async () => {
+            try {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/${uid}`);
+                setListeComptes(res.data.comptes);
 
-function ImportListeCompte({ onSelectAccount }) {
+                const infoComptePromises = listeComptes.map(async (c) => {
+                    const infoCompte = await axios.get(`${process.env.REACT_APP_API_URL}api/compte/${c}`);
+                    return infoCompte.data;
+                });
 
-    return <div>
-        {data.map(c => <div key={c.id} className="m-2">
-            <EnteteCompteListe id={c.id} name={c.name} lien={c.AdresseConnexion} />
-            <SupCompteListe />
-            <button className="m-1" onClick={() => onSelectAccount(c.id)}>Ouvrir</button>
-        </div>)}
-    </div>
-}
+                Promise.all(infoComptePromises).then((infos) => {
+                    setInfoCompte(infos);
+                });
+            } catch (err) {
+                console.log("No token");
+            }
+        };
+        fetchComptes();
+    }, [uid]);
 
-/* PARTIE 3 */
-function AfficheDetailsCompte(props) {
-
-    return <div className="wrapper d-flex align-items-center justify-content-center">
-        <div className="loginWrapper rounded">
-            <h2 className="mb-3">{data[props.id].name}</h2>
-            <p>{data[props.id].AdresseConnexion}</p>
-            <form>
-                <div className="form-group mb-2">
-                    <label htmlFor="text" className="form-label">Mot de passe :</label>
-                    <input type="password" className="form-control" value={data[props.id].passeword}></input>
-                    <label htmlFor="text" className="form-label">Mail de reference :</label>
-                    <input type="password" className="form-control" value={data[props.id].AdresseReferenceCompte}></input>
-                    <label htmlFor="disabledSelect" className="form-label">Catégorie compte :</label>
-                    <select className="form-select">
-                        <option selected>{data[props.id].Categorie}</option>
-                        <option>Banque</option>
-                        <option>Jeux</option>
-                        <option>Admin</option>
-                        <option>Autres</option>
-                    </select>
+    return (
+        <div className="container">
+            {listeComptes.map((c, index) => (
+                <div key={c.id} className="m-2 bg-light">
+                    <h2>Compte : {infoCompte[index]?.compte}</h2>
+                    <h2>Link : {infoCompte[index]?.adresse}</h2>
                 </div>
-                <button className="m-1">Modifier</button>
-                <button className="m-1">Save</button>
-            </form>
+            ))}
         </div>
-    </div>
+    );
 }
+
+/* Section 3 */
 
 function Main() {
     const uid = useContext(UidContext);
     const [selectedAccountId, setSelectedAccountId] = useState(null);
 
     const handleClick = (e) => {
+        //Logout solution without deleting cookies in frontend (backend only)
         e.preventDefault()
         try {
             axios.get(`${process.env.REACT_APP_API_URL}api/user/logout`);
-            window.location.href = process.env.BACK_URL;
+            window.location = '/';
         } catch (error) {
             console.log(error);
         }
@@ -201,12 +189,10 @@ function Main() {
                     </div>
                     <div className="middlepane">
                         <h1>Partie 2</h1>
-                        <ImportListeCompte onSelectAccount={setSelectedAccountId} />
+                        <EnteteCompteListe />
                     </div>
                     <div className="rightpane">
                         <h1>Partie 3</h1>
-                        {selectedAccountId !== null && (
-                            <AfficheDetailsCompte id={selectedAccountId} />)}
                     </div>
                 </div>
             </div> : <div>

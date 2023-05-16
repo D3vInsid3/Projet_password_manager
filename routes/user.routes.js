@@ -10,14 +10,17 @@ router.get('/logout', authController.logout)
 // users DB
 router.get('/', userController.getAllUsers)
 
-// user DB par id
+// user DB by id
 router.get('/:id', userController.userInfo)
 
-// modification d'un user par son id
+// modify user by id
 router.put('/:id', userController.updateUser)
 
-// delete d'un user par son id
+// delete user by id
 router.delete('/:id', userController.deleteUser)
+
+// add compte to user by double ids
+router.patch('/compte/:idUser/:idCompte', userController.addCompte)
 
 
 module.exports = router
