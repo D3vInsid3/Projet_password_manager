@@ -19,7 +19,8 @@ const userSchema = new mongoose.Schema(
       minLength: 5
     },
     comptes: {
-      type: [String]
+      type: [String],
+      required: false
     }
   },
   {

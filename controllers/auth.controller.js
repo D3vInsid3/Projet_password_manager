@@ -4,15 +4,22 @@ const { signUpErrors, signInErrors } = require('../utils/errors.utils.js')
 
 
 
-// S'enregistrer
+// Create user
 module.exports.signUp = async (req, res) => {
-    const { email, password } = req.body
+    //const { email, password } = req.body
+    const newUser = new UserModel({
+        email: req.body.email,
+        password: req.body.password
+    })
+        
     try {
-        const user = await UserModel.create({ email, password })
-        res.status(201).json({ user: user._id })
+        //const user = await UserModel.create({ email, password })   
+        const user = await newUser.save()     
+        //res.status(201).json({ user: user._id })
+        return res.status(201).json(user)
     } catch (err) {
         const errors = signUpErrors(err)
-        res.status(200).send({ errors })
+        res.status(400).send({ errors })
     }
 }
 

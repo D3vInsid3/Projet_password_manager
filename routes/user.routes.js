@@ -22,5 +22,8 @@ router.delete('/:id', userController.deleteUser)
 // add compte to user by double ids
 router.patch('/compte/:idUser/:idCompte', userController.addCompte)
 
+// delete compte to user by double ids
+router.patch('/compte/:idUser/:idCompte/remove', userController.deleteCompte)
+
 
 module.exports = router

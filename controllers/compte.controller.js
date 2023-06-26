@@ -15,7 +15,7 @@ module.exports.readCompte = async (req, res) => {
         return res.status(400).send("Cette ID n'est pas dans la base de donnée, ID " + req.params.id)
     }
 
-    const compte = await CompteModel.findById(req.params.id).select('-password');
+    const compte = await CompteModel.findById(req.params.id);
     if (compte) {
         res.send(compte)
     } else {

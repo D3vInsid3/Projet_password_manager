@@ -32,7 +32,7 @@ module.exports.updateUser = async (req, res) => {
             { _id: req.params.id },
             {
                 $set: {
-                    pseudo: req.body.pseudo,
+                    //pseudo: req.body.pseudo,
                     email: req.body.email
                 }
             },
@@ -84,4 +84,27 @@ module.exports.addCompte = async (req, res) => {
         res.status(500).json(error);
     }
 }
+
+module.exports.deleteCompte = async (req, res) => {
+    if (!ObjectID.isValid(req.params.idUser)) {
+        return res.status(400).send("Cette ID n'est pas dans la base de donnée, ID " + req.params.idUser);
+    }
+
+    try {
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            req.params.idUser,
+            { $pull: { comptes: req.params.idCompte } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).exec();
+
+        if (updatedUser) {
+            res.status(200).json(updatedUser);
+        } else {
+            res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
+
 
