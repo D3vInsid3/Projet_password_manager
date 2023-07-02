@@ -123,11 +123,12 @@ function CreateNewCompte() {
 };
 
 /* Section 2 */
-function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
+function EnteteCompteListe({ triSelection, orderCategorie }) {
     const uid = useContext(UidContext);
     const [listeComptes, setListeComptes] = useState([]);
     const [infoCompte, setInfoCompte] = useState([]);
     const [isLoading, setIsLoading] = useState(true)
+    const [listeCategories, setListeCategories] = useState([])
     //const [detailsCompteIndex, setDetailsCompteIndex] = useState(null);
     const [detailsCompteIndex, setDetailsCompteIndex] = useState(false);
 
@@ -135,12 +136,9 @@ function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
         setDetailsCompteIndex(index === detailsCompteIndex ? null : index)
     }
 
-    const showDetailsCompte2 = () => {
-        setDetailsCompteIndex(!detailsCompteIndex)
-    }
     const fetchComptes = async () => {
         try {
-            const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/${uid}`);            
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/${uid}`);
             const comptes = res.data.comptes.sort((a, b) => (a.compte || "").localeCompare(b.compte));
 
             const infoComptePromises = comptes.map(async (c) => {
@@ -150,7 +148,8 @@ function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
 
             const infos = await Promise.all(infoComptePromises);
             let updatedInfoCompte = infos.slice();
-                        
+
+            setListeCategories(updatedInfoCompte.map((c) => c.categorie.toLowerCase()));            
 
             if (orderCategorie === "magasin") {
                 const magasinComptes = infos.filter((item) => item.categorie.toLowerCase() === "magasin")
@@ -164,7 +163,17 @@ function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
                 setListeComptes(jeuxComptesIds.sort((a, b) => (a.compte || "").localeCompare(b.compte)));
             } else {
                 setListeComptes(comptes);
-            }
+            }           
+
+            listeCategories.forEach(element => {
+                if (orderCategorie === element) {
+                    const elementComptes = infos.filter((item) => item.categorie.toLowerCase() === element)
+                    const elementComptesIds = elementComptes.map((item) => item._id);
+                    updatedInfoCompte = elementComptes.slice().sort((a, b) => (a.compte || "").localeCompare(b.compte));
+                    setListeComptes(elementComptesIds.sort((a, b) => (a.compte || "").localeCompare(b.compte)));
+                }
+
+            });
 
             if (triSelection === "asc") {
                 updatedInfoCompte = updatedInfoCompte.sort((a, b) => (a.compte || "").localeCompare(b.compte));
@@ -175,7 +184,7 @@ function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
             setInfoCompte(updatedInfoCompte);
             setIsLoading(false);
 
-            
+
 
         } catch (err) {
             console.log("Error during connection with DB", err);
@@ -187,7 +196,7 @@ function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
     useEffect(() => {
         fetchComptes();
         setIsLoading(true)
-    }, [uid, triSelection, orderCategorie, reset]);
+    }, [uid, triSelection, orderCategorie]);
 
 
     return (
@@ -310,10 +319,25 @@ function Main() {
     }
 
     function SelecteurFiltreCompte() {
-        //Axios des comptes d'un user
-        //puis axios des comptes pour récupe les catégories
-        //lister les catégorie pour les ajouter en filtre
-        //renvoyer à la partie 2 la catégorie choisi pour le filtre
+        const [listeCategories, setListeCategorie] = useState([]);
+        const fetchCategorie = async () => {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/${uid}`);
+            const comptes = res.data.comptes.sort((a, b) => (a.compte || "").localeCompare(b.compte));
+
+            const infoComptePromises = comptes.map(async (c) => {
+                const infoCompte = await axios.get(`${process.env.REACT_APP_API_URL}api/compte/${c}`);
+                return infoCompte.data;
+            })
+
+            const infos = await Promise.all(infoComptePromises);
+            let updatedInfoCompte = infos.slice();
+
+            setListeCategorie(updatedInfoCompte.map((c) => c.categorie));            
+        }
+
+        useEffect(() => {
+            fetchCategorie();
+        }, [uid]);
 
         const handleChangeCategorie = (e) => {
             const categorieSelection = e.target.value;
@@ -324,9 +348,9 @@ function Main() {
             <label htmlFor="disabledSelect" className="form-label">Filtre comptes</label>
             <select className="form-select" value={orderCategorie} onChange={handleChangeCategorie}>
                 <option selected value="global">Choisissez une categorie</option>
-                <option value="banque">Banque</option>
-                <option value="jeux">Jeux</option>
-                <option value="magasin">Magasin</option>
+                {[...new Set(listeCategories)].map((categorie) => (
+                    <option key={categorie} value={categorie.toLowerCase()}>{categorie.toLowerCase()}</option>
+                ))}
             </select>
         </form>
     }
@@ -343,7 +367,7 @@ function Main() {
                         <CreateNewCompte />
                     </div>
                     <div className="middlepane">
-                        <h1>Partie 2</h1>                        
+                        <h1>Partie 2</h1>
                         <EnteteCompteListe triSelection={triSelection} orderCategorie={orderCategorie} />
                     </div>
                 </div>
