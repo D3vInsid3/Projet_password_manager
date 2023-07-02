@@ -4,103 +4,10 @@ import { useEffect, useState, useContext } from "react";
 import '../styles/styles.css';
 import axios from "axios";
 import { UidContext } from "../components/AppContext.js";
-import { set } from "mongoose";
 import { Button, Modal } from 'react-bootstrap';
 
 
-const data = [
-    {
-        "id": 0,
-        "name": "Caisse d'Epargne",
-        "AdresseReferenceCompte": "david@hotmail.com",
-        "AdresseConnexion": "https://facebook.com",
-        "passeword": "12324",
-        "Pseudo": "DavidD",
-        "Nom": "David",
-        "Prenom": "Dufour",
-        "Birthday": "23-10-85",
-        "Categorie": "Banque"
-    },
-    {
-        "id": 1,
-        "name": "Entreprise 2",
-        "AdresseReferenceCompte": "d_dufour@hotmail.com",
-        "AdresseConnexion": "https://instagram.com",
-        "passeword": "12324",
-        "Pseudo": "DavidD",
-        "Nom": "David",
-        "Prenom": "Dufour",
-        "Birthday": "23-10-85",
-        "Categorie": "Banque"
-    },
-    {
-        "id": 2,
-        "name": "Entreprise 3",
-        "AdresseReferenceCompte": "d_dufour@hotmail.com",
-        "AdresseConnexion": "https://twitter.com",
-        "passeword": "4321",
-        "Pseudo": "DavidD",
-        "Nom": "David",
-        "Prenom": "Dufour",
-        "Birthday": "23-10-85",
-        "Categorie": "Jeux"
-    },
-    {
-        "id": 3,
-        "name": "Entreprise 4",
-        "AdresseReferenceCompte": "d_dufour@hotmail.com",
-        "AdresseConnexion": "https://grafikart.com",
-        "passeword": "12324",
-        "Pseudo": "DavidD",
-        "Nom": "David",
-        "Prenom": "Dufour",
-        "Birthday": "23-10-85",
-        "Categorie": "Jeux"
-    },
-    {
-        "id": 4,
-        "name": "Entreprise 5",
-        "AdresseReferenceCompte": "d_dufour@hotmail.com",
-        "AdresseConnexion": "https://grafikart.com",
-        "passeword": "toto123",
-        "Pseudo": "DavidD",
-        "Nom": "David",
-        "Prenom": "Dufour",
-        "Birthday": "23-10-85",
-        "Categorie": "Magasin"
-    }
-]
-
-/* GLOBAL */
-function BoutonCompte(props) {
-    const [comptes, setComptes] = useState([]);
-    useEffect(() => {
-        setComptes(data)
-    }, []);
-
-    const handleClick = (id) => {
-        console.log('sup')
-        const nouveauxComptes = comptes.filter((compte) => compte.id !== id);
-        setComptes(nouveauxComptes);
-        /* Reste ici à faire la gestion des nouvelles donneés, soit via JSON soir via DB */
-    }
-
-    return <button className="m-1" onClick={() => handleClick(props.id)}>{props.children}</button>
-}
-
 /* Section 1 */
-function SelecteurFiltreCompte() {
-
-    const uniqueCategorie = [...new Set(data.map((c) => c.Categorie))];
-
-    return <form>
-        <label htmlFor="disabledSelect" className="form-label">Filtre comptes</label>
-        <select className="form-select">
-            {uniqueCategorie.map(c => <option key={c}> {c} </option>)}
-        </select>
-    </form>
-}
-
 function CreateNewCompte() {
     const uid = useContext(UidContext);
     const [showModal, setShowModal] = useState(false);
@@ -215,72 +122,94 @@ function CreateNewCompte() {
     );
 };
 
-
-function FiltreOrdreAlph() {
-    return <form>
-        <label htmlFor="disabledSelect" className="form-label">Filtre comptes</label>
-        <select className="form-select">
-            <option>De A à Z</option>
-            <option>De Z à A</option>
-        </select>
-    </form>
-}
-
 /* Section 2 */
-function EnteteCompteListe() {
+function EnteteCompteListe({ triSelection, orderCategorie, reset }) {
     const uid = useContext(UidContext);
     const [listeComptes, setListeComptes] = useState([]);
     const [infoCompte, setInfoCompte] = useState([]);
-
-    //const [detailsCompte, setDetailsCompte] = useState(false);
-    const [detailsCompteIndex, setDetailsCompteIndex] = useState(null)
-
-
+    const [isLoading, setIsLoading] = useState(true)
+    //const [detailsCompteIndex, setDetailsCompteIndex] = useState(null);
+    const [detailsCompteIndex, setDetailsCompteIndex] = useState(false);
 
     const showDetailsCompte = (index) => {
-        //setDetailsCompte(!detailsCompte)
         setDetailsCompteIndex(index === detailsCompteIndex ? null : index)
     }
 
-    useEffect(() => {
+    const showDetailsCompte2 = () => {
+        setDetailsCompteIndex(!detailsCompteIndex)
+    }
+    const fetchComptes = async () => {
+        try {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/${uid}`);            
+            const comptes = res.data.comptes.sort((a, b) => (a.compte || "").localeCompare(b.compte));
 
-        const fetchComptes = async () => {
-            try {
-                const res = await axios.get(`${process.env.REACT_APP_API_URL}api/user/${uid}`);
-                setListeComptes(res.data.comptes);
+            const infoComptePromises = comptes.map(async (c) => {
+                const infoCompte = await axios.get(`${process.env.REACT_APP_API_URL}api/compte/${c}`);
+                return infoCompte.data;
+            })
 
-                const infoComptePromises = res.data.comptes.map(async (c) => {
-                    const infoCompte = await axios.get(`${process.env.REACT_APP_API_URL}api/compte/${c}`);
-                    return infoCompte.data;
-                });
+            const infos = await Promise.all(infoComptePromises);
+            let updatedInfoCompte = infos.slice();
+                        
 
-                Promise.all(infoComptePromises).then((infos) => {
-                    setInfoCompte(infos);
-                });
-            } catch (err) {
-                console.log("Error during connection with DB", err);
+            if (orderCategorie === "magasin") {
+                const magasinComptes = infos.filter((item) => item.categorie.toLowerCase() === "magasin")
+                const magasinComptesIds = magasinComptes.map((item) => item._id);
+                updatedInfoCompte = magasinComptes.slice().sort((a, b) => (a.compte || "").localeCompare(b.compte));
+                setListeComptes(magasinComptesIds.sort((a, b) => (a.compte || "").localeCompare(b.compte)));
+            } else if (orderCategorie === "jeux") {
+                const jeuxComptes = infos.filter((item) => item.categorie.toLowerCase() === "jeux");
+                const jeuxComptesIds = jeuxComptes.map((item) => item._id);
+                updatedInfoCompte = jeuxComptes.slice().sort((a, b) => (a.compte || "").localeCompare(b.compte));
+                setListeComptes(jeuxComptesIds.sort((a, b) => (a.compte || "").localeCompare(b.compte)));
+            } else {
+                setListeComptes(comptes);
             }
-        };
+
+            if (triSelection === "asc") {
+                updatedInfoCompte = updatedInfoCompte.sort((a, b) => (a.compte || "").localeCompare(b.compte));
+            } else if (triSelection === "desc") {
+                updatedInfoCompte = updatedInfoCompte.sort((a, b) => (b.compte || "").localeCompare(a.compte));
+            }
+
+            setInfoCompte(updatedInfoCompte);
+            setIsLoading(false);
+
+            
+
+        } catch (err) {
+            console.log("Error during connection with DB", err);
+            setIsLoading(false)
+        }
+    };
+
+    // Appeler fetchComptes à chaque changement de uid ou triSelection
+    useEffect(() => {
         fetchComptes();
-    }, [uid]);
-
-
+        setIsLoading(true)
+    }, [uid, triSelection, orderCategorie, reset]);
 
 
     return (
         <div className="container">
-            {listeComptes.map((compte, index) => (
-                <div key={compte.id || compte} className="m-2 bg-light row">
-                    <div className="col">
-                        <h2>Compte : {infoCompte[index]?.compte.toUpperCase()}</h2>
-                        <h2>Link : {infoCompte[index]?.adresse}</h2>
-                        {index === detailsCompteIndex && <DetailsCompte infosCompte={infoCompte[index]} />}
+            {isLoading ? (
+                <div>Loading...</div> // Affiche l'indicateur de chargement lorsque isLoading est true
+            ) : (
+                listeComptes.map((c, index) => (
+                    <div key={c} className="m-2 bg-light row">
+                        <div className="col">
+                            <h2>Compte : {infoCompte[index]?.compte.toUpperCase()}</h2>
+                            <h2>Link : {infoCompte[index]?.adresse}</h2>
+                            {index === detailsCompteIndex && <DetailsCompte infosCompte={infoCompte[index]} />}
+                        </div>
+                        <div className="col d-flex align-items-center justify-content-end">
+                            <button variant="primary" onClick={() => showDetailsCompte(index)}>
+                                ...
+                            </button>
+                        </div>
                     </div>
-                    <div className="col d-flex align-items-center justify-content-end">
-                        <button variant="primary" onClick={() => showDetailsCompte(index)}>...</button>
-                    </div>
-                </div>
-            ))}
+                ))
+            )}
         </div>
     );
 }
@@ -288,12 +217,13 @@ function EnteteCompteListe() {
 function DetailsCompte(props) {
     const uid = useContext(UidContext);
 
-    
+
     const [email, setEmail] = useState(props.infosCompte.email);
-    const [password, setPassword] = useState(props.infosCompte.password);    
+    const [password, setPassword] = useState(props.infosCompte.password);
     const [categorie, setCategorie] = useState(props.infosCompte.categorie);
     const [autre, setAutre] = useState(props.infosCompte.autre);
     const [pseudo, setPseudo] = useState(props.infosCompte.pseudo);
+
 
     async function deleteCompte(idCompte) {
         await axios({
@@ -316,7 +246,7 @@ function DetailsCompte(props) {
             method: "Put",
             url: `${process.env.REACT_APP_API_URL}api/compte/${idCompte}`,
             withCredentials: true,
-            data: {                
+            data: {
                 "email": email,
                 "password": password,
                 "categorie": categorie,
@@ -329,7 +259,7 @@ function DetailsCompte(props) {
     }
 
     return (
-        <div>
+        <div key={props.infosCompte._id}>
             <h3 className="text-center">Détails du compte</h3>
             <p>Email : <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></p>
             <p>Mot de passe : <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} /></p>
@@ -346,6 +276,8 @@ function DetailsCompte(props) {
 
 function Main() {
     const uid = useContext(UidContext);
+    const [triSelection, setTriSelection] = useState("");
+    const [orderCategorie, setOrderCategorie] = useState("");
 
     const logout = (e) => {
         //Logout solution without deleting cookies in frontend (backend only)
@@ -358,6 +290,46 @@ function Main() {
         }
     }
 
+    function FiltreOrdreAlph() {
+        const [orderTri, setOrderTri] = useState("");
+
+        const handleChange = (e) => {
+            const triSelection = e.target.value;
+            setOrderTri(triSelection);
+            setTriSelection(triSelection);
+        }
+
+        return <form>
+            <label htmlFor="disabledSelect" className="form-label">Filtre comptes</label>
+            <select className="form-select" value={orderTri} onChange={handleChange}>
+                <option value="">Choisissez un tri</option>
+                <option value="asc">De A à Z</option>
+                <option value="desc">De Z à A</option>
+            </select>
+        </form>
+    }
+
+    function SelecteurFiltreCompte() {
+        //Axios des comptes d'un user
+        //puis axios des comptes pour récupe les catégories
+        //lister les catégorie pour les ajouter en filtre
+        //renvoyer à la partie 2 la catégorie choisi pour le filtre
+
+        const handleChangeCategorie = (e) => {
+            const categorieSelection = e.target.value;
+            setOrderCategorie(categorieSelection)
+        }
+
+        return <form>
+            <label htmlFor="disabledSelect" className="form-label">Filtre comptes</label>
+            <select className="form-select" value={orderCategorie} onChange={handleChangeCategorie}>
+                <option selected value="global">Choisissez une categorie</option>
+                <option value="banque">Banque</option>
+                <option value="jeux">Jeux</option>
+                <option value="magasin">Magasin</option>
+            </select>
+        </form>
+    }
 
     return (
         <div className="container">
@@ -371,8 +343,8 @@ function Main() {
                         <CreateNewCompte />
                     </div>
                     <div className="middlepane">
-                        <h1>Partie 2</h1>
-                        <EnteteCompteListe />
+                        <h1>Partie 2</h1>                        
+                        <EnteteCompteListe triSelection={triSelection} orderCategorie={orderCategorie} />
                     </div>
                 </div>
             </div> : <div>
