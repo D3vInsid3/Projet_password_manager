@@ -13,17 +13,17 @@ function Home() {
 
     //Logout solution with deleting cookie frontend and backend
     const removeCookie = (key) => {
-      if (window !== "undefined") {        
-        cookie.remove(key, {expires: 0.1})
+      if (window !== "undefined") {
+        cookie.remove(key, { expires: 0.1 })
       }
     }
 
-    const logout = async () => {      
+    const logout = async () => {
       await axios({
         method: 'get',
         url: `${process.env.REACT_APP_API_URL}api/user/logout`,
         withCredentials: true
-      }).then(() => {        
+      }).then(() => {
         removeCookie("jwt")
         window.location = "/"
       }).catch((err) => {
@@ -33,8 +33,8 @@ function Home() {
 
     logout()
 
-       
-}
+
+  }
 
   return (
     <div className="wrapper bg-dark d-flex align-items-center justify-content-center">
@@ -45,6 +45,15 @@ function Home() {
           <div className="d-grid gap-2">
             {uid ? <button className="" onClick={handleClick}>Logout</button> : <button className=""><Link className="clear" to="/Login">Login</Link></button>}
             <button className=""><Link className="clear" to="/signup">Signup</Link></button>
+          </div>
+          <div className="mt-3">
+            <ul>
+              <p>Todo list</p>
+              <li>ajouter l'id du user pour chacun de ces comptes</li>
+              <li>ajouter un panel admin</li>
+              <li>ajouter un outil pour fabriquer de mdp</li>
+              <li>faire l'ui</li>
+            </ul>
           </div>
         </form>
       </div>

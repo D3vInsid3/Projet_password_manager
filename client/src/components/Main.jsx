@@ -6,6 +6,108 @@ import axios from "axios";
 import { UidContext } from "../components/AppContext.js";
 import { Button, Modal } from 'react-bootstrap';
 
+/* Global */
+function PasswordGenerator() {
+    //optionnal : add an api for test password force/level
+    const [showModalPG, setShowModalPG] = useState(false);
+
+    const [checkboxChiffre, setCheckBoxChiffre] = useState(false);
+    const [checkboxMinuscule, setCheckBoxMinuscule] = useState(false);
+    const [checkboxMajuscule, setCheckBoxMajuscule] = useState(false);
+    const [checkboxSpeciaux, setCheckBoxSpeciaux] = useState(false);
+    const [selectNbre, setSelectNbre] = useState("");
+    const [passwordGenerate, setPasswordGenerate] = useState("");
+
+    const handleClosePG = () => setShowModalPG(false);
+    const handleShowPG = () => setShowModalPG(true);
+
+    function generatePassword() {
+
+        let caracteres = "";
+
+        if (checkboxChiffre) { caracteres += "0123456789" }
+
+        if (checkboxMinuscule) { caracteres += "abcdefghijklmnopqrstuvwxyz" }
+
+        if (checkboxMajuscule) { caracteres += "ABCDEFGHIJKLMNOPQRSTUVWXYZ" }
+
+        if (checkboxSpeciaux) { caracteres += "!@#$%^&*()_+" }
+
+        let motDePasse = "";
+        for (let i = 0; i < selectNbre; i++) {
+            const index = Math.floor(Math.random() * caracteres.length);
+            motDePasse += caracteres.charAt(index);
+        }
+        setPasswordGenerate(motDePasse)
+    }
+
+    function copiePaste() {
+        navigator.clipboard.writeText(passwordGenerate)
+            .then(() => {
+                console.log("Mot de passe copié !");
+            })
+            .catch((error) => {
+                console.error("Erreur lors de la copie du mot de passe :", error);
+            });
+    }
+
+
+    return <div>
+        <Button className="d-grid gap-2 col-6 mx-auto" variant="primary" onClick={handleShowPG}>
+            PG
+        </Button>
+        <Modal show={showModalPG} onHide={handleClosePG}>
+            <Modal.Header closeButton>
+                <Modal.Title>Password Generator</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div className="row">
+                    <div className="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="0" onChange={() => setCheckBoxChiffre(!checkboxChiffre)} />
+                        <label className="form-check-label" for="">Avec des chiffres [1 2 3 4 ....]</label>
+                    </div>
+                    <div className="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="1" onChange={() => setCheckBoxMinuscule(!checkboxMinuscule)} />
+                        <label className="form-check-label" for="">Avec des minuscules [a b c d ....]</label>
+                    </div>
+                    <div className="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="2" onChange={() => setCheckBoxMajuscule(!checkboxMajuscule)} />
+                        <label className="form-check-label" for="">Avec des majuscules [A B C D ....]</label>
+                    </div>
+                    <div className="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="3" onChange={() => setCheckBoxSpeciaux(!checkboxSpeciaux)} />
+                        <label className="form-check-label" for="">Avec des caractère spéciaux [@ ! $ & ....]</label>
+                    </div>
+                    <div className="mb-3 form-check">
+                        <select className="form-select form-select-sm" aria-label="" onChange={(e) => setSelectNbre(e.target.value)}>
+                            <option selected>Nombre de caractères</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <button className="btn btn-light" onClick={generatePassword}>Créer</button>
+                    <input type="text" className="mt-2" id="" value={passwordGenerate} />
+                </div>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClosePG}>
+                    Fermer
+                </Button>
+                <Button variant="primary" onClick={copiePaste}>
+                    Copier
+                </Button>
+            </Modal.Footer>
+        </Modal>
+    </div>
+}
 
 /* Section 1 */
 function CreateNewCompte() {
@@ -57,9 +159,16 @@ function CreateNewCompte() {
         })
     }
 
-
-
-
+    function paste () {        
+        navigator.clipboard.readText()
+    .then((text) => {
+        setPassword(text);
+      console.log("Valeur collée :", password);      
+    })
+    .catch((error) => {
+      console.error("Erreur lors de la lecture du presse-papiers :", error);      
+    });
+    }
 
     return (
         <>
@@ -87,7 +196,11 @@ function CreateNewCompte() {
                                 </div>
                                 <div className="form-group mb-2">
                                     <label htmlFor="password" className="form-label">Passeword :</label>
-                                    <input type="password" className="form-control" id="password" onChange={(e) => setPassword(e.target.value)} value={password} required></input>
+                                    <input type="text" className="form-control" id="password" onChange={(e) => setPassword(e.target.value)} value={password} required></input>
+                                </div>
+                                <div className="row">
+                                    <div className="col text-center"><button className="btn btn-primary" onClick={paste}>Coller</button></div>
+                                    <div className="col"><PasswordGenerator /></div>
                                 </div>
                                 <div className="form-group mb-2">
                                     <label className="form-label">Site du compte :</label>
@@ -149,7 +262,7 @@ function EnteteCompteListe({ triSelection, orderCategorie }) {
             const infos = await Promise.all(infoComptePromises);
             let updatedInfoCompte = infos.slice();
 
-            setListeCategories(updatedInfoCompte.map((c) => c.categorie.toLowerCase()));            
+            setListeCategories(updatedInfoCompte.map((c) => c.categorie.toLowerCase()));
 
             if (orderCategorie === "magasin") {
                 const magasinComptes = infos.filter((item) => item.categorie.toLowerCase() === "magasin")
@@ -163,7 +276,7 @@ function EnteteCompteListe({ triSelection, orderCategorie }) {
                 setListeComptes(jeuxComptesIds.sort((a, b) => (a.compte || "").localeCompare(b.compte)));
             } else {
                 setListeComptes(comptes);
-            }           
+            }
 
             listeCategories.forEach(element => {
                 if (orderCategorie === element) {
@@ -212,9 +325,7 @@ function EnteteCompteListe({ triSelection, orderCategorie }) {
                             {index === detailsCompteIndex && <DetailsCompte infosCompte={infoCompte[index]} />}
                         </div>
                         <div className="col d-flex align-items-center justify-content-end">
-                            <button variant="primary" onClick={() => showDetailsCompte(index)}>
-                                ...
-                            </button>
+                            <button variant="primary" onClick={() => showDetailsCompte(index)}>...</button>
                         </div>
                     </div>
                 ))
@@ -268,7 +379,7 @@ function DetailsCompte(props) {
     }
 
     return (
-        <div key={props.infosCompte._id}>
+        <div key={props.infosCompte._id} className="container">
             <h3 className="text-center">Détails du compte</h3>
             <p>Email : <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></p>
             <p>Mot de passe : <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} /></p>
@@ -332,7 +443,7 @@ function Main() {
             const infos = await Promise.all(infoComptePromises);
             let updatedInfoCompte = infos.slice();
 
-            setListeCategorie(updatedInfoCompte.map((c) => c.categorie));            
+            setListeCategorie(updatedInfoCompte.map((c) => c.categorie));
         }
 
         useEffect(() => {
