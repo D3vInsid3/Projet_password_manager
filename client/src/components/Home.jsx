@@ -49,10 +49,9 @@ function Home() {
           <div className="mt-3">
             <ul>
               <p>Todo list</p>
-              <li>ajouter l'id du user pour chacun de ces comptes</li>
-              <li>ajouter un panel admin</li>
-              <li>ajouter un outil pour fabriquer de mdp</li>
-              <li>faire l'ui</li>
+              <li>add id user for each compte created</li>
+              <li>add administrator panel</li>              
+              <li>do ui interface</li>
             </ul>
           </div>
         </form>
